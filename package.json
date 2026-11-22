@@ -1,0 +1,19 @@
+{
+  "name": "chesslens",
+  "version": "1.0.0",
+  "description": "ChessLens - free chess game analysis with native Stockfish",
+  "main": "main.js",
+  "license": "GPL-3.0-or-later",
+  "scripts": { "start": "electron .", "dist": "electron-builder --publish never" },
+  "devDependencies": { "electron": "^33.0.0", "electron-builder": "^25.1.8" },
+  "build": {
+    "appId": "com.chesslens.app",
+    "productName": "ChessLens",
+    "files": ["main.js", "server.js", "app/**"],
+    "extraResources": [{ "from": "engine", "to": "engine" }],
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage", "category": "Game" }
+  }
+}
