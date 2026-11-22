@@ -1,0 +1,36 @@
+name: Build desktop app
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, asset: stockfish-windows-x86-64-universal.zip, exe: stockfish.exe, flag: --win }
+          - { os: ubuntu-latest,  asset: stockfish-linux-x86-64-universal.tar.gz, exe: stockfish, flag: --linux }
+          - { os: macos-latest,   asset: stockfish-macos-universal.tar.gz, exe: stockfish, flag: --mac }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Download Stockfish 19 (official universal build)
+        shell: bash
+        run: |
+          mkdir -p engine sfx
+          curl -L -o sf.pkg "https://github.com/official-stockfish/Stockfish/releases/download/sf_19/${{ matrix.asset }}"
+          if [[ "${{ matrix.asset }}" == *.zip ]]; then unzip -q sf.pkg -d sfx; else tar xzf sf.pkg -C sfx; fi
+          f=$(find sfx -type f -name 'stockfish*' ! -name '*.md' ! -name '*.txt' ! -name '*.cff' | head -n 1)
+          cp "$f" "engine/${{ matrix.exe }}"; chmod +x "engine/${{ matrix.exe }}"
+      - run: npm install
+      - run: npx electron-builder ${{ matrix.flag }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chesslens-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
